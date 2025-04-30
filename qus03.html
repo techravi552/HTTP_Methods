@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>User Dashboard</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input { margin: 5px; padding: 5px; }
+    button { padding: 6px 10px; }
+    .user { margin-bottom: 10px; }
+  </style>
+</head>
+<body>
+  <h1>User Dashboard</h1>
+
+  <h3>Add New User</h3>
+  <form id="userForm">
+    <input type="text" id="name" placeholder="Name" required />
+    <input type="email" id="email" placeholder="Email" required />
+    <button type="submit">Add User</button>
+  </form>
+
+  <h3>Registered Users</h3>
+  <div id="userList"></div>
+
+  <script>
+    const API_URL = 'https://mockapi.io/users'; // Replace with actual working API URL
+const userList = document.getElementById('userList');
+const userForm = document.getElementById('userForm');
+const nameInput = document.getElementById('name');
+const emailInput = document.getElementById('email');
+
+let users = []; // to track duplicates
+
+// Fetch all users
+async function fetchUsers() {
+  try {
+    const res = await fetch(API_URL);
+    users = await res.json();
+    renderUsers();
+  } catch (err) {
+    alert("Failed to fetch users.");
+    console.error(err);
+  }
+}
+
+// Display users
+function renderUsers() {
+  userList.innerHTML = '';
+  users.forEach(user => {
+    const div = document.createElement('div');
+    div.className = 'user';
+    div.textContent = `${user.name} (${user.email})`;
+    userList.appendChild(div);
+  });
+}
+
+// Add new user
+userForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const name = nameInput.value.trim();
+  const email = emailInput.value.trim();
+
+  // Check for duplicate email
+  const duplicate = users.find(u => u.email.toLowerCase() === email.toLowerCase());
+  if (duplicate) {
+    alert('This email is already registered.');
+    return;
+  }
+
+  try {
+    const res = await fetch(API_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name, email })
+    });
+
+    if (!res.ok) throw new Error('Failed to add user');
+
+    const newUser = await res.json();
+    users.push(newUser);
+    renderUsers();
+    userForm.reset();
+  } catch (err) {
+    alert("Error adding user.");
+    console.error(err);
+  }
+});
+
+// Initial fetch
+fetchUsers();
+
+  </script>
+</body>
+</html>
